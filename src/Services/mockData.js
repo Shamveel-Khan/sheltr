@@ -18,8 +18,8 @@ let mockAllocations = [
 ];
 
 let mockPayments = [
-  { id: 1, student_id: 1, student_name: 'Ali Raza', student_code: '24K-0941', amount: 25000, payment_date: new Date().toISOString().split('T')[0], status: 'Paid', note: 'Semester fee' },
-  { id: 2, student_id: 2, student_name: 'Sara Khan', student_code: '24K-0942', amount: 15000, payment_date: new Date().toISOString().split('T')[0], status: 'Paid', note: 'Semester fee' },
+  { id: 1, student_id: 1, student_name: 'Ali Raza', student_code: '24K-0941', amount: 25000, payment_date: new Date().toISOString().split('T')[0], payment_ts: new Date(Date.now() - 86400000 * 4).toISOString(), status: 'Paid', note: 'Semester fee' },
+  { id: 2, student_id: 2, student_name: 'Sara Khan', student_code: '24K-0942', amount: 15000, payment_date: new Date().toISOString().split('T')[0], payment_ts: new Date(Date.now() - 86400000 * 2).toISOString(), status: 'Paid', note: 'Semester fee' },
 ];
 
 let mockComplaints = [
@@ -102,6 +102,7 @@ export const mockAPI = {
         student_code: student.student_id,
         amount: parseFloat(data.amount),
         payment_date: data.payment_date || new Date().toISOString().split('T')[0],
+        payment_ts: new Date().toISOString(),
         status: data.status || 'Paid',
         note: data.note || ''
       };
@@ -147,6 +148,18 @@ export const mockAPI = {
     await new Promise(r => setTimeout(r, 200));
 
     if (url === '/dashboard') {
+      const revenue_series = mockPayments.reduce((acc, payment) => {
+        const day = payment.payment_ts
+          ? payment.payment_ts.slice(0, 23).replace('T', ' ')
+          : payment.payment_date;
+        const existing = acc.find(item => item.day === day);
+        if (existing) {
+          existing.total += payment.amount;
+        } else {
+          acc.push({ day, total: payment.amount });
+        }
+        return acc;
+      }, []).sort((a, b) => a.day.localeCompare(b.day));
       return {
         data: {
           total_students: mockStudents.length,
@@ -155,7 +168,8 @@ export const mockAPI = {
           available_rooms: mockRooms.filter(r => r.available > 0).length,
           total_payments: mockPayments.reduce((s, p) => s + p.amount, 0),
           pending_complaints: mockComplaints.filter(c => c.status === 'Pending').length,
-          recent_students: mockStudents.slice(-5)
+          recent_students: mockStudents.slice(-5),
+          revenue_series
         }
       };
     }

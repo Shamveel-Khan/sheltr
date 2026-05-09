@@ -37,6 +37,7 @@ CREATE TABLE Payments (
   StudentID NUMBER NOT NULL,
   Amount NUMBER(10,2) NOT NULL,
   PaymentDate DATE NOT NULL,
+  PaymentCreatedAt TIMESTAMP DEFAULT SYSTIMESTAMP,
   Status VARCHAR2(20) NOT NULL,
   Note VARCHAR2(200),
   CONSTRAINT fk_payment_student FOREIGN KEY (StudentID) REFERENCES Students(StudentID)

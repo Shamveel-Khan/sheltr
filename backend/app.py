@@ -135,7 +135,14 @@ def dashboard():
         "ORDER BY s.CreatedAt DESC"
         ") WHERE ROWNUM <= 5"
     )
+    revenue_series = fetch_all(
+        "SELECT TO_CHAR(PaymentCreatedAt, 'YYYY-MM-DD HH24:MI:SS.FF3') AS day, SUM(Amount) AS total "
+        "FROM Payments "
+        "GROUP BY TO_CHAR(PaymentCreatedAt, 'YYYY-MM-DD HH24:MI:SS.FF3') "
+        "ORDER BY TO_CHAR(PaymentCreatedAt, 'YYYY-MM-DD HH24:MI:SS.FF3')"
+    )
     stats["recent_students"] = recent_students
+    stats["revenue_series"] = revenue_series
     return jsonify(stats)
 
 
@@ -325,8 +332,8 @@ def add_payment():
     data = request.get_json(silent=True) or {}
     payment_date = data.get("payment_date") or datetime.utcnow().strftime("%Y-%m-%d")
     execute(
-        "INSERT INTO Payments (StudentID, Amount, PaymentDate, Status, Note) "
-        "VALUES (:student_id, :amount, TO_DATE(:payment_date, 'YYYY-MM-DD'), :status, :note)",
+        "INSERT INTO Payments (StudentID, Amount, PaymentDate, PaymentCreatedAt, Status, Note) "
+        "VALUES (:student_id, :amount, TO_DATE(:payment_date, 'YYYY-MM-DD'), SYSTIMESTAMP, :status, :note)",
         {
             "student_id": data.get("student_id"),
             "amount": data.get("amount"),
