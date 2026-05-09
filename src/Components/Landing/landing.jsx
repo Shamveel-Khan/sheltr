@@ -1,7 +1,7 @@
 import DotGrid from '../Common/DotGrid';
 import { AuthHeader } from '../Common/AuthHeader';
 
-export const LandingPage = ({ onLogin }) => {
+export const LandingPage = ({ onLogin, onFeatures, onAbout }) => {
   return (
     <div className="landing-wrap">
       <div className="landing-bg">
@@ -20,7 +20,14 @@ export const LandingPage = ({ onLogin }) => {
 
       <div className="landing-overlay">
         <div className="landing-header">
-          <AuthHeader actionLabel="Login" onAction={onLogin} />
+          <AuthHeader
+            actionLabel="Login"
+            onAction={onLogin}
+            links={[
+              { label: 'Features', onClick: onFeatures },
+              { label: 'About', onClick: onAbout }
+            ]}
+          />
         </div>
 
         <main className="landing-center">

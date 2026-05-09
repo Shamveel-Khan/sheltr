@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { api } from '../../Services/api';
 import { AuthHeader } from '../Common/AuthHeader';
 
-export const LoginPage = ({ onBack, onSuccess }) => {
+export const LoginPage = ({ onBack, onSuccess, onFeatures, onAbout }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -34,7 +34,14 @@ export const LoginPage = ({ onBack, onSuccess }) => {
     <div className="login-wrap">
       <div className="login-overlay">
         <div className="login-header">
-          <AuthHeader actionLabel="Back" onAction={onBack} />
+          <AuthHeader
+            actionLabel="Back"
+            onAction={onBack}
+            links={[
+              { label: 'Features', onClick: onFeatures },
+              { label: 'About', onClick: onAbout }
+            ]}
+          />
         </div>
 
         <div className="login-center">

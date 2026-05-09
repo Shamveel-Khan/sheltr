@@ -11,7 +11,12 @@ export const AuthHeader = ({ brand = 'HostelHQ', links, actionLabel, onAction })
         <div className="auth-actions">
           <div className="auth-links">
             {navLinks.map(link => (
-              <button key={link.label} type="button" className="btn btn-light">
+              <button
+                key={link.label}
+                type="button"
+                className="btn btn-light"
+                onClick={link.onClick}
+              >
                 {link.label}
               </button>
             ))}

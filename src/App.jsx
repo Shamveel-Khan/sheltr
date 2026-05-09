@@ -11,6 +11,8 @@ import { ComplaintsPage } from './Components/Complaints/complaintpage';
 import { VisitorsPage } from './Components/Visitors/visitorpage';
 import { SqlLogsPage } from './Components/Admin/sqlLogs';
 import { LandingPage } from './Components/Landing/landing';
+import { FeaturesPage } from './Components/Features/features';
+import { AboutPage } from './Components/About/about';
 import { LoginPage } from './Components/Login/login';
 import { MagnificationDock } from './Components/Common/MagnificationDock';
 import {
@@ -52,14 +54,18 @@ function App() {
     localStorage.removeItem('hostel_user');
     api.setToken(null);
     setUser({ full_name: 'Sheltr User', role: 'staff' });
-    setPage('dashboard');
+    setPage('landing');
   };
 
   const pages = {
-    landing: <LandingPage onLogin={() => setPage('login')} />,
+    landing: <LandingPage onLogin={() => setPage('login')} onFeatures={() => setPage('features')} onAbout={() => setPage('about')} />,
+    features: <FeaturesPage onLogin={() => setPage('login')} onBack={() => setPage('landing')} onAbout={() => setPage('about')} />,
+    about: <AboutPage onLogin={() => setPage('login')} onBack={() => setPage('landing')} onFeatures={() => setPage('features')} />,
     login: (
       <LoginPage
         onBack={() => setPage('landing')}
+        onFeatures={() => setPage('features')}
+        onAbout={() => setPage('about')}
         onSuccess={(nextUser) => {
           setUser(nextUser);
           setPage('dashboard');
@@ -80,7 +86,7 @@ function App() {
   }
 
   const activePage = pages[page] || pages.dashboard;
-  const isAppPage = page !== 'landing' && page !== 'login';
+  const isAppPage = !['landing', 'login', 'features', 'about'].includes(page);
 
   const dockItems = [
     { icon: <LayoutGrid size={22} />, label: 'Dashboard', onClick: () => setPage('dashboard') },
