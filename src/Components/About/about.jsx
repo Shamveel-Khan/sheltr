@@ -1,6 +1,6 @@
 import { AuthHeader } from '../Common/AuthHeader';
 import Lanyard from '../Common/Lanyard';
-import kabeerImage from '../../assets/lanyard/kabeer.JPG';
+import kabeerImage from '../../assets/lanyard/kabeer.jpg';
 import skImage from '../../assets/lanyard/sk.jpg';
 import sahilImage from '../../assets/lanyard/sahil.jpg';
 
