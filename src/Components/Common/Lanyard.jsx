@@ -1,11 +1,10 @@
 /* eslint-disable react/no-unknown-property */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Canvas, extend, useFrame } from '@react-three/fiber';
-import { useGLTF, useTexture, Environment, Lightformer } from '@react-three/drei';
+import { useTexture, Environment, Lightformer } from '@react-three/drei';
 import { BallCollider, CuboidCollider, Physics, RigidBody, useRopeJoint, useSphericalJoint } from '@react-three/rapier';
 import { MeshLineGeometry, MeshLineMaterial } from 'meshline';
 
-import cardGLB from '../../assets/lanyard/card.glb';
 import lanyard from '../../assets/lanyard/lanyard.png';
 
 import * as THREE from 'three';
@@ -13,7 +12,7 @@ import './Lanyard.css';
 
 extend({ MeshLineGeometry, MeshLineMaterial });
 
-export default function Lanyard({ position = [0, 0, 30], gravity = [0, -40, 0], fov = 20, transparent = true }) {
+function LanyardCanvas({ bandOffsets = [0], cardImages = [], position, gravity, fov, transparent }) {
   const [isMobile, setIsMobile] = useState(() => typeof window !== 'undefined' && window.innerWidth < 768);
 
   useEffect(() => {
@@ -23,29 +22,64 @@ export default function Lanyard({ position = [0, 0, 30], gravity = [0, -40, 0], 
   }, []);
 
   return (
+    <Canvas
+      camera={{ position: position, fov: fov }}
+      dpr={[1, isMobile ? 1.5 : 2]}
+      gl={{ alpha: transparent }}
+      onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0x000000), transparent ? 0 : 1)}
+    >
+      <ambientLight intensity={Math.PI} />
+      <Physics gravity={gravity} timeStep={isMobile ? 1 / 30 : 1 / 60}>
+        {bandOffsets.map((offset, index) => (
+          <Band
+            key={index}
+            isMobile={isMobile}
+            offsetX={offset}
+            cardImage={cardImages[index]}
+          />
+        ))}
+      </Physics>
+      <Environment blur={0.75}>
+        <Lightformer intensity={2} color="white" position={[0, -1, 5]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
+        <Lightformer intensity={3} color="white" position={[-1, -1, 1]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
+        <Lightformer intensity={3} color="white" position={[1, 1, 1]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
+        <Lightformer intensity={10} color="white" position={[-10, 0, 14]} rotation={[0, Math.PI / 2, Math.PI / 3]} scale={[100, 10, 1]} />
+      </Environment>
+    </Canvas>
+  );
+}
+
+export default function Lanyard({ cardImage, position = [0, 0, 30], gravity = [0, -40, 0], fov = 20, transparent = true }) {
+  return (
     <div className="lanyard-wrapper">
-      <Canvas
-        camera={{ position: position, fov: fov }}
-        dpr={[1, isMobile ? 1.5 : 2]}
-        gl={{ alpha: transparent }}
-        onCreated={({ gl }) => gl.setClearColor(new THREE.Color(0x000000), transparent ? 0 : 1)}
-      >
-        <ambientLight intensity={Math.PI} />
-        <Physics gravity={gravity} timeStep={isMobile ? 1 / 30 : 1 / 60}>
-          <Band isMobile={isMobile} />
-        </Physics>
-        <Environment blur={0.75}>
-          <Lightformer intensity={2} color="white" position={[0, -1, 5]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
-          <Lightformer intensity={3} color="white" position={[-1, -1, 1]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
-          <Lightformer intensity={3} color="white" position={[1, 1, 1]} rotation={[0, 0, Math.PI / 3]} scale={[100, 0.1, 1]} />
-          <Lightformer intensity={10} color="white" position={[-10, 0, 14]} rotation={[0, Math.PI / 2, Math.PI / 3]} scale={[100, 10, 1]} />
-        </Environment>
-      </Canvas>
+      <LanyardCanvas
+        bandOffsets={[0]}
+        cardImages={[cardImage]}
+        position={position}
+        gravity={gravity}
+        fov={fov}
+        transparent={transparent}
+      />
     </div>
   );
 }
 
-function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
+export function LanyardTriplet({ cardImages = [], position = [0, 0, 17], gravity = [0, -40, 0], fov = 30, transparent = true }) {
+  return (
+    <div className="lanyard-wrapper">
+      <LanyardCanvas
+        bandOffsets={[-6, 0, 6]}
+        cardImages={cardImages}
+        position={position}
+        gravity={gravity}
+        fov={fov}
+        transparent={transparent}
+      />
+    </div>
+  );
+}
+
+function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false, offsetX = 0, cardImage }) {
   const band = useRef();
   const fixed = useRef();
   const j1 = useRef();
@@ -57,8 +91,10 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
   const rot = new THREE.Vector3();
   const dir = new THREE.Vector3();
   const segmentProps = { type: 'dynamic', canSleep: true, colliders: false, angularDamping: 4, linearDamping: 4 };
-  const { nodes, materials } = useGLTF(cardGLB);
   const texture = useTexture(lanyard);
+  const cardTexture = useTexture(cardImage);
+  const cardSize = { width: 1.0, height: 1.4 };
+  const cardRadius = 0.1;
   const [curve] = useState(() => new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()]));
   const [dragged, drag] = useState(false);
   const [hovered, hover] = useState(false);
@@ -66,7 +102,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
   useRopeJoint(fixed, j1, [[0, 0, 0], [0, 0, 0], 1]);
   useRopeJoint(j1, j2, [[0, 0, 0], [0, 0, 0], 1]);
   useRopeJoint(j2, j3, [[0, 0, 0], [0, 0, 0], 1]);
-  useSphericalJoint(j3, card, [[0, 0, 0], [0, 1.5, 0]]);
+  useSphericalJoint(j3, card, [[0, 0, 0], [0, 0.8, 0]]);
 
   useEffect(() => {
     if (hovered) {
@@ -74,6 +110,70 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
       return () => void (document.body.style.cursor = 'auto');
     }
   }, [hovered, dragged]);
+
+  const cardShape = useMemo(() => {
+    const halfW = cardSize.width / 2;
+    const halfH = cardSize.height / 2;
+    const radius = Math.min(cardRadius, halfW, halfH);
+    const shape = new THREE.Shape();
+
+    shape.moveTo(-halfW + radius, -halfH);
+    shape.lineTo(halfW - radius, -halfH);
+    shape.absarc(halfW - radius, -halfH + radius, radius, -Math.PI / 2, 0, false);
+    shape.lineTo(halfW, halfH - radius);
+    shape.absarc(halfW - radius, halfH - radius, radius, 0, Math.PI / 2, false);
+    shape.lineTo(-halfW + radius, halfH);
+    shape.absarc(-halfW + radius, halfH - radius, radius, Math.PI / 2, Math.PI, false);
+    shape.lineTo(-halfW, -halfH + radius);
+    shape.absarc(-halfW + radius, -halfH + radius, radius, Math.PI, (3 * Math.PI) / 2, false);
+
+    return shape;
+  }, [cardRadius, cardSize.height, cardSize.width]);
+
+  const cardGeometry = useMemo(() => {
+    const geometry = new THREE.ShapeGeometry(cardShape);
+    geometry.computeBoundingBox();
+
+    const bbox = geometry.boundingBox;
+    const size = new THREE.Vector2(
+      bbox.max.x - bbox.min.x,
+      bbox.max.y - bbox.min.y
+    );
+
+    const uv = [];
+    const position = geometry.attributes.position;
+    for (let i = 0; i < position.count; i += 1) {
+      const x = position.getX(i);
+      const y = position.getY(i);
+      uv.push((x - bbox.min.x) / size.x, (y - bbox.min.y) / size.y);
+    }
+
+    geometry.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+    return geometry;
+  }, [cardShape]);
+
+  useEffect(() => {
+    if (!cardTexture?.image) return;
+    const imageAspect = cardTexture.image.width / cardTexture.image.height;
+    const cardAspect = cardSize.width / cardSize.height;
+
+    let repeatX = 1;
+    let repeatY = 1;
+
+    if (imageAspect > cardAspect) {
+      repeatY = cardAspect / imageAspect;
+    } else {
+      repeatX = imageAspect / cardAspect;
+    }
+
+    cardTexture.wrapS = THREE.ClampToEdgeWrapping;
+    cardTexture.wrapT = THREE.ClampToEdgeWrapping;
+    cardTexture.rotation = 0;
+    cardTexture.repeat.set(repeatX, repeatY);
+    cardTexture.offset.set((1 - repeatX) / 2, (1 - repeatY) / 2);
+
+    cardTexture.needsUpdate = true;
+  }, [cardTexture, cardSize.height, cardSize.width]);
 
   useFrame((state, delta) => {
     if (dragged) {
@@ -108,7 +208,7 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
 
   return (
     <>
-      <group position={[0, 4, 0]}>
+      <group position={[offsetX, 4, 0]}>
         <RigidBody ref={fixed} {...segmentProps} type="fixed" />
         <RigidBody position={[0.5, 0, 0]} ref={j1} {...segmentProps}>
           <BallCollider args={[0.1]} />
@@ -120,10 +220,10 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
           <BallCollider args={[0.1]} />
         </RigidBody>
         <RigidBody position={[2, 0, 0]} ref={card} {...segmentProps} type={dragged ? 'kinematicPosition' : 'dynamic'}>
-          <CuboidCollider args={[0.8, 1.125, 0.01]} />
+          <CuboidCollider args={[0.75, 0.95, 0.01]} />
           <group
-            scale={2.25}
-            position={[0, -1.2, -0.05]}
+            scale={[2.2, 2.1, 2.1]}
+            position={[0, -0.7, -0.05]}
             onPointerOver={() => hover(true)}
             onPointerOut={() => hover(false)}
             onPointerUp={e => (e.target.releasePointerCapture(e.pointerId), drag(false))}
@@ -132,18 +232,17 @@ function Band({ maxSpeed = 50, minSpeed = 0, isMobile = false }) {
               drag(new THREE.Vector3().copy(e.point).sub(vec.copy(card.current.translation())))
             )}
           >
-            <mesh geometry={nodes.card.geometry}>
+            <mesh geometry={cardGeometry}>
               <meshPhysicalMaterial
-                map={materials.base.map}
+                map={cardTexture}
                 map-anisotropy={16}
                 clearcoat={isMobile ? 0 : 1}
                 clearcoatRoughness={0.15}
                 roughness={0.9}
-                metalness={0.8}
+                metalness={0.2}
+                side={THREE.DoubleSide}
               />
             </mesh>
-            <mesh geometry={nodes.clip.geometry} material={materials.metal} material-roughness={0.3} />
-            <mesh geometry={nodes.clamp.geometry} material={materials.metal} />
           </group>
         </RigidBody>
       </group>

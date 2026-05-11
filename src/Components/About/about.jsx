@@ -1,5 +1,8 @@
 import { AuthHeader } from '../Common/AuthHeader';
 import Lanyard from '../Common/Lanyard';
+import kabeerImage from '../../assets/lanyard/kabeer.JPG';
+import skImage from '../../assets/lanyard/sk.jpg';
+import sahilImage from '../../assets/lanyard/sahil.jpg';
 
 export const AboutPage = ({ onLogin, onBack, onFeatures }) => {
   return (
@@ -14,16 +17,15 @@ export const AboutPage = ({ onLogin, onBack, onFeatures }) => {
               { label: 'Features', onClick: onFeatures }
             ]}
           />
+          <h1 className="info-header-title">About</h1>
         </div>
 
         <main className="info-content">
           <section className="info-hero">
-            <h1 className="info-title">About</h1>
             <div className="about-grid">
-              {['Operations', 'Campus Life', 'Support'].map(label => (
-                <div key={label} className="about-item">
-                  <Lanyard position={[0, 0, 26]} gravity={[0, -40, 0]} />
-                  <div className="about-caption">{label}</div>
+              {[kabeerImage, skImage, sahilImage].map((image, index) => (
+                <div key={index} className="about-item">
+                  <Lanyard cardImage={image} position={[0, 0, 26]} gravity={[0, -40, 0]} />
                 </div>
               ))}
             </div>

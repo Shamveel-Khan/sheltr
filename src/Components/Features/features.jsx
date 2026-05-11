@@ -13,11 +13,11 @@ export const FeaturesPage = ({ onLogin, onBack, onAbout }) => {
               { label: 'About', onClick: onAbout }
             ]}
           />
+          <h1 className="info-header-title">Features</h1>
         </div>
 
         <main className="info-content">
           <section className="info-hero">
-            <h1 className="info-title">Features</h1>
             <p className="info-subtitle">Everything you need to run hostel operations cleanly.</p>
             <div className="feature-grid">
               <div className="feature-card">
