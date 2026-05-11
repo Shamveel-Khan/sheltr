@@ -1,4 +1,4 @@
-import { Modal } from './Modal';
+import { Modal } from './modal';
 
 export function Confirm({ open, msg, onConfirm, onCancel }) {
   if (!open) return null;
