@@ -10,7 +10,7 @@
 
 ## API
 
-Base URL: `http://localhost:5000/api`
+Base URL: `https://florinda-histoid-hermila.ngrok-free.dev/api`
 
 Protected endpoints require `Authorization: Bearer <token>`.
 

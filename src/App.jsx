@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { api } from './services/api';
-import { useToast } from './hooks/useToast';
+import { api } from './Services/api';
+import { useToast } from './Hooks/useToast';
 import { Toast } from './Components/Common/toast';
 import { Dashboard } from './Components/Dashboard/dashboard';
 import { StudentsPage } from './Components/Students/student';

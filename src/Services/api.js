@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { mockAPI } from './mockData';
 
-const BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000/api';
+const BASE = import.meta.env.VITE_API_BASE || 'https://florinda-histoid-hermila.ngrok-free.dev/api';
 
 export const api = {
   get: (url, cfg = {}) => {
